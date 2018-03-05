@@ -92,20 +92,22 @@ namespace EnhancedDevelopment.Transporter
         private void TransporterBeamResourcesOut()
         {
 
-            List<Thing> foundThings = GenRadial.RadialDistinctThingsAround(this.Position, this.Map, 5, true).Where(x => x.def.category == ThingCategory.Item).Where(x => x.Spawned).ToList();
+            List<Thing> _FoundThings = GenRadial.RadialDistinctThingsAround(this.Position, this.Map, 5, true).Where(x => x.def.category == ThingCategory.Item).Where(x => x.Spawned).ToList();
 
-            if (foundThings.Any())
+            if (_FoundThings.Any())
             {
-                Log.Message("Found:" + foundThings.Count().ToString());
+                //Log.Message("Found:" + foundThings.Count().ToString());
 
-                GameComponent_Transporter.TransportControler().StoreThing(foundThings);
-                foundThings.ForEach(x =>
+                GameComponent_Transporter.TransportControler().StoreThing(_FoundThings);
+                _FoundThings.ForEach(_x =>
                 {
-                    Log.Message("Removing: " + x.def.defName);
-                    x.DeSpawn();
+                    //Log.Message("Removing: " + x.def.defName);
+                    this.DisplayTransportEffect(_x);
+
+                    _x.DeSpawn();
 
                     // Tell the MapDrawer that here is something thats changed
-                    this.Map.mapDrawer.MapMeshDirty(x.Position, MapMeshFlag.Things, true, false);
+                    this.Map.mapDrawer.MapMeshDirty(_x.Position, MapMeshFlag.Things, true, false);
                 });
 
 
@@ -121,6 +123,7 @@ namespace EnhancedDevelopment.Transporter
                 if (_CurrentPawn.Spawned)
                 {
 
+                    this.DisplayTransportEffect(_CurrentPawn);
                     GameComponent_Transporter.TransportControler().StoreThing(_CurrentPawn);
 
                     _CurrentPawn.DeSpawn();
@@ -142,7 +145,7 @@ namespace EnhancedDevelopment.Transporter
 
                 if (_Thing.def.CanHaveFaction)
                 {
-                    _Thing.SetFactionDirect(RimWorld.Faction.OfPlayer);
+                    _Thing.SetFactionDirect(Faction.OfPlayer);
                 }
 
                 GenPlace.TryPlaceThing(_Thing, this.Position, this.Map, ThingPlaceMode.Near);
@@ -164,9 +167,24 @@ namespace EnhancedDevelopment.Transporter
 
                 }
 
+                this.DisplayTransportEffect(_Thing);
+
             });
 
         }
+
+        private void DisplayTransportEffect(Thing thingToTransport)
+        {
+            
+            MoteMaker.MakeStaticMote(thingToTransport.Position, thingToTransport.Map, ThingDefOf.Mote_ExplosionFlash, 10);
+            //int num2 = 10;
+            //for (int i = 0; i < num2; i++)
+            //{
+            //    MoteMaker.ThrowDustPuff(_Thing.Position, _Thing.Map, Rand.Range(0.8f, 1.2f));
+            //}
+
+        }
+
     }
 
 }
