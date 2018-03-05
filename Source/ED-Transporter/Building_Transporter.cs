@@ -11,7 +11,7 @@ namespace EnhancedDevelopment.Transporter
     [StaticConstructorOnStartup]
     class Building_Transporter : Verse.Building
     {
-              
+
         static Building_Transporter()
         {
 
@@ -98,7 +98,7 @@ namespace EnhancedDevelopment.Transporter
             {
                 Log.Message("Found:" + foundThings.Count().ToString());
 
-                GameComponent_Transporter.GetTransportControler().StoreThing(foundThings);
+                GameComponent_Transporter.TransportControler().StoreThing(foundThings);
                 foundThings.ForEach(x =>
                 {
                     Log.Message("Removing: " + x.def.defName);
@@ -120,8 +120,8 @@ namespace EnhancedDevelopment.Transporter
             {
                 if (_CurrentPawn.Spawned)
                 {
-                    
-                    GameComponent_Transporter.GetTransportControler().StoreThing(_CurrentPawn);
+
+                    GameComponent_Transporter.TransportControler().StoreThing(_CurrentPawn);
 
                     _CurrentPawn.DeSpawn();
 
@@ -130,15 +130,40 @@ namespace EnhancedDevelopment.Transporter
                 }
             });
         }
-        
+
         private void TransporterBeamIn()
         {
-            List<Thing> _NewThings = GameComponent_Transporter.GetTransportControler().RetreiveThings();
+            List<Thing> _NewThings = GameComponent_Transporter.TransportControler().RetreiveThings();
 
-            _NewThings.ForEach(x =>
+            _NewThings.ForEach(_Thing =>
             {
-                Log.Message("Placing:" + x.def.defName);
-                GenPlace.TryPlaceThing(x, this.Position, this.Map, ThingPlaceMode.Near);
+
+                Log.Message("Placing:" + _Thing.def.defName);
+
+                if (_Thing.def.CanHaveFaction)
+                {
+                    _Thing.SetFactionDirect(RimWorld.Faction.OfPlayer);
+                }
+
+                GenPlace.TryPlaceThing(_Thing, this.Position, this.Map, ThingPlaceMode.Near);
+                //GenSpawn.Spawn(x,this.Position, this.Map);
+
+                Pawn _Pawn = _Thing as Pawn;
+                if (_Pawn != null)
+                {
+                    if (_Pawn.RaceProps.Humanlike)
+                    {
+                        TaleRecorder.RecordTale(TaleDefOf.LandedInPod, _Pawn);
+                        //TaleRecorder.RecordTale(TaleDefOf.LandedInPod, pawn);
+                    }
+
+                    if (_Pawn.IsColonist && _Pawn.Spawned && !base.Map.IsPlayerHome)
+                    {
+                        _Pawn.drafter.Drafted = true;
+                    }
+
+                }
+
             });
 
         }
